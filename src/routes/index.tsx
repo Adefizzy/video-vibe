@@ -59,6 +59,7 @@ function App() {
     videoPlayerRef,
     handleElementSelect,
     setVideoDuration,
+    handleDragEnd,
   } = useVideoBoard()
 
   return (
@@ -96,6 +97,15 @@ function App() {
                           onClick={() => handleElementSelect(element.clientId)}
                           key={element.clientId}
                           {...element}
+                          onDragEnd={(e) => {
+                            if (!element.clientId) return
+
+                            handleDragEnd({
+                              clientId: element.clientId,
+                              x: e.target.x(),
+                              y: e.target.y(),
+                            })
+                          }}
                         />
                       )
                     }
@@ -105,6 +115,15 @@ function App() {
                           onClick={() => handleElementSelect(element.clientId)}
                           key={element.clientId}
                           {...element}
+                          onDragEnd={(e) => {
+                            if (!element.clientId) return
+
+                            handleDragEnd({
+                              clientId: element.clientId,
+                              x: e.target.x(),
+                              y: e.target.y(),
+                            })
+                          }}
                         />
                       )
                     }

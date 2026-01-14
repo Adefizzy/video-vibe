@@ -48,8 +48,7 @@ export const useVideoBoard = () => {
   const [elements, setElements] = useState<Array<TextElement | LinkElement>>([])
   const [selectedElementId, setSelectedElementId] = useState<string>('')
   const [videoDuration, setVideoDuration] = useState<number>(0)
-
-  console.log({ elements})
+  console.log('elemens:', elements)
 
   const TextSchema = useMemo(
     () => getTextSchema(videoDuration),
@@ -101,7 +100,6 @@ export const useVideoBoard = () => {
     switch (type) {
       case ElementTypes.TEXT:
         const newElement = { ...textElement, clientId: uuidv4() }
-        console.log('Adding new text element:', newElement)
         setElements([...elements, newElement])
         setSelectedElementId(newElement.clientId)
         textForm.reset({
@@ -153,6 +151,7 @@ export const useVideoBoard = () => {
             endTime,
             startTime,
             type: selectedElement.type,
+            position: selectedElement.position
           } as TextElement | LinkElement
         }
         return el
@@ -165,25 +164,38 @@ export const useVideoBoard = () => {
 
     if (selectedElement.type === ElementTypes.TEXT) {
       const subscriptionText = watchTextForm((data) => {
-        console.log('Text form data changed:', data)
-        updateElement({
-          ...data,
-          fontSize: data.fontSize ? Number(data.fontSize) : undefined,
-          startTime: data.startTime ? Number(timeToSeconds(data.startTime)) : undefined,
-          endTime: data.endTime ? Number(timeToSeconds(data.endTime)) : undefined,
-        }, selectedElement)
+        updateElement(
+          {
+            ...data,
+            fontSize: data.fontSize ? Number(data.fontSize) : undefined,
+            startTime: data.startTime
+              ? Number(timeToSeconds(data.startTime))
+              : undefined,
+            endTime: data.endTime
+              ? Number(timeToSeconds(data.endTime))
+              : undefined,
+          },
+          selectedElement,
+        )
       })
       return () => subscriptionText.unsubscribe()
     }
 
     if (selectedElement.type === ElementTypes.LINK) {
       const subscriptionLink = watchLinkForm((data) => {
-        updateElement({
-          ...data,
-          fontSize: data.fontSize ? Number(data.fontSize) : undefined,
-          startTime: data.startTime ? Number(timeToSeconds(data.startTime)) : undefined,
-          endTime: data.endTime ? Number(timeToSeconds(data.endTime)) : undefined,
-        }, selectedElement)
+        updateElement(
+          {
+            ...data,
+            fontSize: data.fontSize ? Number(data.fontSize) : undefined,
+            startTime: data.startTime
+              ? Number(timeToSeconds(data.startTime))
+              : undefined,
+            endTime: data.endTime
+              ? Number(timeToSeconds(data.endTime))
+              : undefined,
+          },
+          selectedElement,
+        )
       })
       return () => subscriptionLink.unsubscribe()
     }
@@ -192,6 +204,28 @@ export const useVideoBoard = () => {
   const handleElementSelect = (clientId?: string) => {
     if (!clientId) return
     setSelectedElementId(clientId)
+  }
+
+  const handleDragEnd = ({
+    clientId,
+    x,
+    y,
+  }: {
+    clientId: string
+    x: number
+    y: number
+  }) => {
+    setElements((prevElements) =>
+      prevElements.map((el) => {
+        if (el.clientId === clientId) {
+          return {
+            ...el,
+            position: { x, y },
+          }
+        }
+        return el
+      }),
+    )
   }
 
   return {
@@ -207,5 +241,6 @@ export const useVideoBoard = () => {
     videoPlayerRef,
     handleElementSelect,
     setVideoDuration,
+    handleDragEnd,
   }
 }
