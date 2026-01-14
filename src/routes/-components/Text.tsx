@@ -13,8 +13,6 @@ import Konva from 'konva'
     height: 0,
 } */
 
-
-
 export const Text = (props: TextElement) => {
   const rectRef = useRef<Konva.Rect>(null)
   const textRef = useRef<Konva.Text>(null)
@@ -23,9 +21,18 @@ export const Text = (props: TextElement) => {
 
   useEffect(() => {
     if (textRef.current) {
+      console.log('Calculating text rect...', textRef.current.getSelfRect())
       setRectDimensions(textRef.current.getSelfRect())
     }
-  }, [textRef.current])
+  }, [
+    textRef.current,
+    props.fontSize,
+    props.content,
+    props.width,
+    props.padding,
+    props.height,
+    props.fontFamily,
+  ])
 
   return (
     <Group
@@ -36,6 +43,7 @@ export const Text = (props: TextElement) => {
       onDragEnd={props.onDragEnd}
       onDragStart={props.onDragStart}
       onMouseDown={props.onMouseDown}
+      onDblClick={props.onDblClick}
       dragBoundFunc={(pos) => {
         const group = groupRef.current
         if (!group) return pos
@@ -80,11 +88,11 @@ export const Text = (props: TextElement) => {
         ref={textRef}
         x={0}
         y={0}
-        text={props.text}
+        text={props.content}
         fontSize={props.fontSize}
         fontFamily={props.fontFamily}
         fill={props.textColor}
-        padding={props.padding}
+        padding={props.padding ?? 5}
         align={props.align}
         width={props.width}
         height={props.height}

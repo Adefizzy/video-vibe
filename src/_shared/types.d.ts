@@ -13,7 +13,7 @@ interface TextElement {
   borderRadius?: number
   borderWidth?: number
   borderColor?: string
-  text: string
+  content: string
   position?: {
     x?: number
     y?: number
@@ -22,9 +22,30 @@ interface TextElement {
   onDragEnd?: (event: Konva.KonvaEventObject<MouseEvent>) => void
   onDragStart?: (event: Konva.KonvaEventObject<MouseEvent>) => void
   onMouseDown?: (event: Konva.KonvaEventObject<MouseEvent>) => void
+  onDblClick?: (event: Konva.KonvaEventObject<MouseEvent>) => void
 }
 
 interface LinkElement extends TextElement {
   type: 'link'
   url: string
 }
+
+
+type FormInputProps = {
+  type: string;
+  label?: string;
+  required?: boolean;
+  placeholder?: string;
+  description?: string;
+  name: string;
+  options?: Option[];
+  defaultValue?: Option | string;
+  isMulti?: boolean;
+  isClearable?: boolean;
+  isSettings?: boolean;
+  disabled?: boolean;
+  className?: string;
+  labelStyle?: string;
+  pattern?: string;
+  size?: number;
+};
