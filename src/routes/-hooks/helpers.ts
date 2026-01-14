@@ -1,22 +1,69 @@
 import { InputEnum } from '@/_shared/constants'
+import { TIME_REGEX, timeToSeconds } from '@/lib/utils'
 import * as z from 'zod'
 
-export const TextSchema = z.object({
-  content: z.string().min(1, 'Content is required'),
-  bgColor: z.string().optional(),
-  textColor: z.string().optional(),
-  borderColor: z.string().optional(),
-  fontSize: z.string().optional(),
-  fontFamily: z.string().optional(),
-//  align: z.enum(['left', 'center', 'right', 'justify']).optional(),
-})
+const createTimeSchema = (maxSeconds: number) => {
+  return z
+    .object({
+      startTime: z.string().regex(TIME_REGEX, 'Invalid time format'),
+      endTime: z.string().regex(TIME_REGEX, 'Invalid time format'),
+    })
+    .refine(
+      (data) => {
+        const start = timeToSeconds(data.startTime)
+        const end = timeToSeconds(data.endTime)
 
-export const LinkSchema = TextSchema.extend({
-  url: z.string().regex(/^https:\/\/.*/, 'URL must start with https://'),
-})
+        return end >= start
+      },
+      {
+        message: 'End time cannot be before start time',
+        path: ['endTime'],
+      },
+    )
+    .refine(
+      (data) => {
+        return (
+          timeToSeconds(data.startTime) <= maxSeconds &&
+          timeToSeconds(data.endTime) <= maxSeconds
+        )
+      },
+      {
+        message: 'Time exceeds video duration',
+        path: ['endTime'],
+      },
+    )
+}
 
-export type ITextSchema = z.infer<typeof TextSchema>
-export type ILinkSchema = z.infer<typeof LinkSchema>
+/* export const getTextSchema = (videoDuration: number) =>
+  z.object({
+    content: z.string().min(1, 'Content is required'),
+    bgColor: z.string().optional(),
+    textColor: z.string().optional(),
+    borderColor: z.string().optional(),
+    fontSize: z.string().optional(),
+    fontFamily: z.string().optional(),
+  }).extend(createTimeSchema(videoDuration)) */
+
+
+  export const getTextSchema = (videoDuration: number) => {
+  const base = z.object({
+    content: z.string().min(1, 'Content is required'),
+    bgColor: z.string().optional(),
+    textColor: z.string().optional(),
+    borderColor: z.string().optional(),
+    fontSize: z.string().optional(),
+    fontFamily: z.string().optional(),
+  })
+
+  const timeSchema = createTimeSchema(videoDuration)
+
+  return base.extend(timeSchema.shape)
+}
+
+export const getLinkSchema = (videoDuration: number) =>
+  getTextSchema(videoDuration).extend({
+    url: z.string().regex(/^https:\/\/.*/, 'URL must start with https://'),
+  })
 
 export const textInputs: FormInputProps[] = [
   {
@@ -25,6 +72,22 @@ export const textInputs: FormInputProps[] = [
     required: true,
     placeholder: 'Enter your content',
     type: InputEnum.TEXT,
+  },
+  {
+    label: 'Start time',
+    name: 'startTime',
+    required: true,
+    placeholder: '00:00:00',
+    type: InputEnum.TIME,
+    videoDuration: 544,
+  },
+  {
+    label: 'End time',
+    name: 'endTime',
+    required: true,
+    placeholder: '00:00:00',
+    type: InputEnum.TIME,
+    videoDuration: 544,
   },
   {
     label: 'Background Color',
@@ -80,7 +143,7 @@ export const textInputs: FormInputProps[] = [
       { label: 'Trebuchet MS', value: 'Trebuchet MS' },
     ],
   },
- /*  {
+  /*  {
     label: 'Text Align',
     name: 'align',
     required: false,

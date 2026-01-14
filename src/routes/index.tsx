@@ -57,7 +57,8 @@ function App() {
     elements,
     selectedElement,
     videoPlayerRef,
-    handleElementSelect
+    handleElementSelect,
+    setVideoDuration,
   } = useVideoBoard()
 
   return (
@@ -91,12 +92,20 @@ function App() {
                   {elements.map((element) => {
                     if (element.type === ElementTypes.TEXT) {
                       return (
-                        <TextComponent onClick={() => handleElementSelect(element.clientId)} key={element.clientId} {...element} />
+                        <TextComponent
+                          onClick={() => handleElementSelect(element.clientId)}
+                          key={element.clientId}
+                          {...element}
+                        />
                       )
                     }
                     if (element.type === ElementTypes.LINK) {
                       return (
-                        <LinkComponent onClick={() => handleElementSelect(element.clientId)} key={element.clientId} {...element} />
+                        <LinkComponent
+                          onClick={() => handleElementSelect(element.clientId)}
+                          key={element.clientId}
+                          {...element}
+                        />
                       )
                     }
                   })}
@@ -110,7 +119,7 @@ function App() {
               }}
             >
               <ReactPlayer
-              //  ref={videoPlayerRef}
+                //  ref={videoPlayerRef}
                 slot="media"
                 src="https://youtu.be/2Z1oKtxleb4?si=5YQnp50-f5MA5PuA"
                 controls={false}
@@ -120,7 +129,11 @@ function App() {
                   '--controls': 'none',
                 }}
                 onDurationChange={(duration) => {
-                  console.log('Video duration:', duration.currentTarget.duration)
+                  console.log(
+                    'Video duration:',
+                    duration.currentTarget.duration,
+                  )
+                  setVideoDuration(duration.currentTarget.duration)
                 }}
                 onDuration={(duration: any) => {
                   console.log('Video duration2:', duration)

@@ -1,10 +1,13 @@
 import { useForm } from 'react-hook-form'
-import { ITextSchema, TextSchema, LinkSchema, ILinkSchema } from './helpers'
+import { getLinkSchema, getTextSchema } from './helpers'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ElementTypes } from '@/_shared/constants'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { ReactPlayerProps } from 'react-player/types'
+import z from 'zod'
+import { useDurationTiming } from './useDurationTiming'
+import { timeToSeconds } from '@/lib/utils'
 
 const textElement: TextElement = {
   type: ElementTypes.TEXT,
@@ -44,6 +47,20 @@ export const useVideoBoard = () => {
   })
   const [elements, setElements] = useState<Array<TextElement | LinkElement>>([])
   const [selectedElementId, setSelectedElementId] = useState<string>('')
+  const [videoDuration, setVideoDuration] = useState<number>(0)
+
+  console.log({ elements})
+
+  const TextSchema = useMemo(
+    () => getTextSchema(videoDuration),
+    [videoDuration],
+  )
+  const LinkSchema = useMemo(
+    () => getLinkSchema(videoDuration),
+    [videoDuration],
+  )
+  type ITextSchema = z.infer<typeof TextSchema>
+  type ILinkSchema = z.infer<typeof LinkSchema>
 
   useEffect(() => {
     if (containerRef.current) {
@@ -67,7 +84,8 @@ export const useVideoBoard = () => {
     },
     resolver: zodResolver(LinkSchema),
   })
-
+  useDurationTiming({ form: textForm })
+  useDurationTiming({ form: linkForm })
   const { watch: watchTextForm } = textForm
   const { watch: watchLinkForm } = linkForm
 
@@ -89,6 +107,8 @@ export const useVideoBoard = () => {
         textForm.reset({
           ...newElement,
           fontSize: String(newElement.fontSize ?? 12),
+          startTime: String(newElement.startTime ?? 0),
+          endTime: String(newElement.endTime ?? 0),
         })
 
         break
@@ -99,6 +119,8 @@ export const useVideoBoard = () => {
         linkForm.reset({
           ...newLinkElement,
           fontSize: String(newLinkElement.fontSize ?? 12),
+          startTime: String(newLinkElement.startTime ?? 0),
+          endTime: String(newLinkElement.endTime ?? 0),
         })
         break
       default:
@@ -111,47 +133,61 @@ export const useVideoBoard = () => {
     [elements, selectedElementId],
   )
 
-  useEffect(() => {
-    const selectedElement = elements.find(
-      (el) => el.clientId === selectedElementId,
+  const updateElement = (
+    updatedElement: Partial<TextElement | LinkElement>,
+    selectedElement: TextElement | LinkElement,
+  ) => {
+    setElements((prevElements) =>
+      prevElements.map((el) => {
+        if (el.clientId === selectedElement.clientId) {
+          const endTime = updatedElement.endTime
+            ? Number(updatedElement.endTime)
+            : selectedElement.endTime || 0
+          const startTime = updatedElement.startTime
+            ? Number(updatedElement.startTime)
+            : selectedElement.startTime || 0
+          return {
+            ...selectedElement,
+            ...updatedElement,
+            fontSize: Number(updatedElement.fontSize),
+            endTime,
+            startTime,
+            type: selectedElement.type,
+          } as TextElement | LinkElement
+        }
+        return el
+      }),
     )
-    const subscriptionText = watchTextForm((data) => {
-      if (selectedElement?.type === ElementTypes.TEXT) {
-        setElements((prevElements) =>
-          prevElements.map((el) =>
-            el.clientId === selectedElement.clientId
-              ? { ...selectedElement, ...data, fontSize: Number(data.fontSize) }
-              : el,
-          ),
-        )
-      }
-    })
-
-    return () => {
-      subscriptionText.unsubscribe()
-    }
-  }, [watchTextForm, selectedElementId])
+  }
 
   useEffect(() => {
-    const selectedElement = elements.find(
-      (el) => el.clientId === selectedElementId,
-    )
-    const subscriptionLink = watchLinkForm((data) => {
-      if (selectedElement?.type === ElementTypes.LINK) {
-        setElements((prevElements) =>
-          prevElements.map((el) =>
-            el.clientId === selectedElement.clientId
-              ? { ...selectedElement, ...data, fontSize: Number(data.fontSize) }
-              : el,
-          ),
-        )
-      }
-    })
+    if (!selectedElement) return
 
-    return () => {
-      subscriptionLink.unsubscribe()
+    if (selectedElement.type === ElementTypes.TEXT) {
+      const subscriptionText = watchTextForm((data) => {
+        console.log('Text form data changed:', data)
+        updateElement({
+          ...data,
+          fontSize: data.fontSize ? Number(data.fontSize) : undefined,
+          startTime: data.startTime ? Number(timeToSeconds(data.startTime)) : undefined,
+          endTime: data.endTime ? Number(timeToSeconds(data.endTime)) : undefined,
+        }, selectedElement)
+      })
+      return () => subscriptionText.unsubscribe()
     }
-  }, [watchLinkForm, selectedElementId])
+
+    if (selectedElement.type === ElementTypes.LINK) {
+      const subscriptionLink = watchLinkForm((data) => {
+        updateElement({
+          ...data,
+          fontSize: data.fontSize ? Number(data.fontSize) : undefined,
+          startTime: data.startTime ? Number(timeToSeconds(data.startTime)) : undefined,
+          endTime: data.endTime ? Number(timeToSeconds(data.endTime)) : undefined,
+        }, selectedElement)
+      })
+      return () => subscriptionLink.unsubscribe()
+    }
+  }, [selectedElement, watchTextForm, watchLinkForm])
 
   const handleElementSelect = (clientId?: string) => {
     if (!clientId) return
@@ -170,5 +206,6 @@ export const useVideoBoard = () => {
     selectedElement,
     videoPlayerRef,
     handleElementSelect,
+    setVideoDuration,
   }
 }

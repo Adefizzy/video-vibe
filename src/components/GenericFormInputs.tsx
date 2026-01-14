@@ -7,6 +7,7 @@ import { PasswordField } from './PasswordField'
 import { InputEnum } from '@/_shared/constants'
 import { ColorPicker } from './ColorPickerField'
 import { de } from 'zod/v4/locales'
+import { TimeField } from './TimeField'
 
 type IForm = { form: UseFormReturn<z.infer<any>, any, any> }
 const GenericFormInputs: FC<FormInputProps & IForm> = ({
@@ -23,7 +24,8 @@ const GenericFormInputs: FC<FormInputProps & IForm> = ({
   labelStyle,
   pattern, 
   size,
-  defaultValue
+  defaultValue,
+  videoDuration
 }) => {
   switch (type) {
     case InputEnum.TEXT:
@@ -83,6 +85,15 @@ const GenericFormInputs: FC<FormInputProps & IForm> = ({
           defaultValue={defaultValue}
         />
       )
+      case InputEnum.TIME:
+        return (
+          <TimeField
+            form={form}
+            name={name}
+            label={label ?? ""}
+            videoDuration={videoDuration ?? 0}
+          />
+        ) 
     default:
       return null
   }

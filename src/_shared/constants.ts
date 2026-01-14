@@ -13,4 +13,5 @@ export enum InputEnum {
   IMAGE = 'IMAGE',
   PASSWORD = 'PASSWORD',
   EMAIL = 'EMAIL',
+  TIME = 'TIME',
 }

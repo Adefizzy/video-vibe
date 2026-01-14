@@ -14,6 +14,8 @@ interface TextElement {
   borderWidth?: number
   borderColor?: string
   content: string
+  startTime?: number
+  endTime?: number
   position?: {
     x?: number
     y?: number
@@ -48,4 +50,5 @@ type FormInputProps = {
   labelStyle?: string;
   pattern?: string;
   size?: number;
+  videoDuration?: number;
 };
