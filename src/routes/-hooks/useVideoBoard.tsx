@@ -4,8 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ElementTypes } from '@/_shared/constants'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import  { ReactPlayerProps } from 'react-player/types'
-import { duration } from 'node_modules/zod/v4/classic/iso.d.cts'
+import { ReactPlayerProps } from 'react-player/types'
 
 const textElement: TextElement = {
   type: ElementTypes.TEXT,
@@ -56,7 +55,7 @@ export const useVideoBoard = () => {
     defaultValues: {
       content: '',
       bgColor: '#000',
-     // align: 'left',
+      // align: 'left',
     },
     resolver: zodResolver(TextSchema),
   })
@@ -64,7 +63,7 @@ export const useVideoBoard = () => {
     defaultValues: {
       content: '',
       url: '',
-     // align: 'left',
+      // align: 'left',
     },
     resolver: zodResolver(LinkSchema),
   })
@@ -87,14 +86,20 @@ export const useVideoBoard = () => {
         console.log('Adding new text element:', newElement)
         setElements([...elements, newElement])
         setSelectedElementId(newElement.clientId)
-        textForm.reset({...newElement, fontSize: String(newElement.fontSize ?? 12)})
+        textForm.reset({
+          ...newElement,
+          fontSize: String(newElement.fontSize ?? 12),
+        })
 
         break
       case ElementTypes.LINK:
         const newLinkElement = { ...linkElement, clientId: uuidv4() }
         setElements([...elements, newLinkElement])
         setSelectedElementId(newLinkElement.clientId)
-        linkForm.reset({...newLinkElement, fontSize: String(newLinkElement.fontSize ?? 12)})
+        linkForm.reset({
+          ...newLinkElement,
+          fontSize: String(newLinkElement.fontSize ?? 12),
+        })
         break
       default:
         break
@@ -148,11 +153,10 @@ export const useVideoBoard = () => {
     }
   }, [watchLinkForm, selectedElementId])
 
-useEffect(() => {
-  // Duration tracking is handled directly in the ReactPlayer component's onDuration prop
-}, [])
-
-
+  const handleElementSelect = (clientId?: string) => {
+    if (!clientId) return
+    setSelectedElementId(clientId)
+  }
 
   return {
     textForm,
@@ -164,6 +168,7 @@ useEffect(() => {
     containerDimensions,
     elements,
     selectedElement,
-    videoPlayerRef
+    videoPlayerRef,
+    handleElementSelect,
   }
 }

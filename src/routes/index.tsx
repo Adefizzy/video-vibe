@@ -57,6 +57,7 @@ function App() {
     elements,
     selectedElement,
     videoPlayerRef,
+    handleElementSelect
   } = useVideoBoard()
 
   return (
@@ -90,12 +91,12 @@ function App() {
                   {elements.map((element) => {
                     if (element.type === ElementTypes.TEXT) {
                       return (
-                        <TextComponent key={element.clientId} {...element} />
+                        <TextComponent onClick={() => handleElementSelect(element.clientId)} key={element.clientId} {...element} />
                       )
                     }
                     if (element.type === ElementTypes.LINK) {
                       return (
-                        <LinkComponent key={element.clientId} {...element} />
+                        <LinkComponent onClick={() => handleElementSelect(element.clientId)} key={element.clientId} {...element} />
                       )
                     }
                   })}
