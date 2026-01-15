@@ -1,6 +1,5 @@
-import { ElementTypes } from "@/_shared/constants"
 import { Button } from "@/components/ui/button"
-import { LinkIcon } from "lucide-react"
+
 
 type Props = {
     onClick: () => void

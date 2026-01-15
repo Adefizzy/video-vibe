@@ -43,20 +43,6 @@ export const Route = createFileRoute('/')({
   component: App,
 })
 
-/*  <Text
-                  text={text1}
-                  fontSize={26} 
-                  fontFamily="Calibri"
-                  textColor="#fff"
-                  padding={40}
-                  align="center"
-                  width={300}
-                  //borderRadius={10}
-                  borderWidth={1}
-                  borderColor="#555"
-                  bgColor="black"
-                /> */
-
 function App() {
   const {
     textForm,
@@ -70,7 +56,6 @@ function App() {
     containerDimensions,
     elements,
     selectedElement,
-    videoPlayerRef,
     handleElementSelect,
     setVideoDuration,
     handleDragEnd,

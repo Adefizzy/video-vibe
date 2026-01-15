@@ -6,7 +6,6 @@ import { SelectInputField } from './SelectInputField'
 import { PasswordField } from './PasswordField'
 import { InputEnum } from '@/_shared/constants'
 import { ColorPicker } from './ColorPickerField'
-import { de } from 'zod/v4/locales'
 import { TimeField } from './TimeField'
 import { ImageInputField } from './ImageInputField'
 
@@ -22,7 +21,6 @@ const GenericFormInputs: FC<FormInputProps & IForm> = ({
   options,
   disabled,
   className,
-  labelStyle,
   pattern, 
   size,
   defaultValue,

@@ -1,6 +1,4 @@
-import { ArrowUpRightIcon, FolderIcon } from 'lucide-react'
-
-import { Button } from '@/components/ui/button'
+import {  FolderIcon } from 'lucide-react'
 import {
   Empty,
   EmptyContent,

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 
 import { useState } from 'react'
-import { Home, Menu, Network, X, LogOut } from 'lucide-react'
+import { Home, Menu, X, LogOut } from 'lucide-react'
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
