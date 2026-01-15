@@ -54,6 +54,7 @@ export const useVideoBoard = () => {
   >([])
   const [selectedElementId, setSelectedElementId] = useState<string>('')
   const [videoDuration, setVideoDuration] = useState<number>(0)
+  const [videoLink, setVideoLink] = useState('')
 
   const schemas = useMemo(
     () => ({
@@ -255,12 +256,13 @@ export const useVideoBoard = () => {
   }
 
   const handleNavigateToPreview = () => {
+    if (!videoLink) return
     // Save elements to localStorage
     localStorage.setItem('previewElements', JSON.stringify(elements))
     // Save project details to localStorage
     const project = {
       projectName: 'Demo Project',
-      videoUrl: 'https://youtu.be/2Z1oKtxleb4?si=5YQnp50-f5MA5PuA',
+      videoUrl: videoLink,
     }
     localStorage.setItem('previewProject', JSON.stringify(project))
 
@@ -271,22 +273,43 @@ export const useVideoBoard = () => {
   // check if localStorage has previewElements and load them
   useEffect(() => {
     const storedElements = localStorage.getItem('previewElements')
+    const project = localStorage.getItem('previewProject')
     if (storedElements) {
       setElements(JSON.parse(storedElements))
+    }
+
+    if (project) {
+      setVideoLink(JSON.parse(project).videoUrl)
     }
   }, [])
 
   const resetElements = () => {
     setElements([])
+    setVideoLink('')
     localStorage.removeItem('previewElements')
+    localStorage.removeItem('previewProject')
   }
 
   const deleteElement = (clientId?: string) => {
     if (!clientId) return
+    const updatedElements = [...elements].filter(
+      (el) => el.clientId !== clientId,
+    )
+    setElements(updatedElements)
 
-    setElements((prev) => prev.filter((el) => el.clientId !== clientId))
+    if (updatedElements.length > 0) {
+      const nextElement = updatedElements?.at(updatedElements.length - 1)?.clientId
+      setSelectedElementId(nextElement ?? '')
+    } else {
+      setSelectedElementId('')
+    }
+  }
 
-    setSelectedElementId('')
+  const handleVideoInputChange = (value: string) => {
+    const httpsPattern = /^https:\/\/.*/
+    if (httpsPattern.test(value)) {
+      setVideoLink(value)
+    }
   }
 
   return {
@@ -308,5 +331,7 @@ export const useVideoBoard = () => {
     handleNavigateToPreview,
     resetElements,
     deleteElement,
+    handleVideoInputChange,
+    videoLink,
   }
 }
