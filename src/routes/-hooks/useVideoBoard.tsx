@@ -49,20 +49,25 @@ export const useVideoBoard = () => {
     width: 0,
     height: 0,
   })
-  const [elements, setElements] = useState<Array<TextElement | LinkElement | ImageElement>>([])
+  const [elements, setElements] = useState<
+    Array<TextElement | LinkElement | ImageElement>
+  >([])
   const [selectedElementId, setSelectedElementId] = useState<string>('')
   const [videoDuration, setVideoDuration] = useState<number>(0)
 
-  const schemas = useMemo(() => ({
-    [ElementTypes.TEXT]: getTextSchema(videoDuration),
-    [ElementTypes.LINK]: getLinkSchema(videoDuration),
-    [ElementTypes.IMAGE]: getImageSchema(videoDuration),
-  }), [videoDuration])
+  const schemas = useMemo(
+    () => ({
+      [ElementTypes.TEXT]: getTextSchema(videoDuration),
+      [ElementTypes.LINK]: getLinkSchema(videoDuration),
+      [ElementTypes.IMAGE]: getImageSchema(videoDuration),
+    }),
+    [videoDuration],
+  )
 
   type SchemaTypes = {
-    [ElementTypes.TEXT]: z.infer<typeof schemas[ElementTypes.TEXT]>
-    [ElementTypes.LINK]: z.infer<typeof schemas[ElementTypes.LINK]>
-    [ElementTypes.IMAGE]: z.infer<typeof schemas[ElementTypes.IMAGE]>
+    [ElementTypes.TEXT]: z.infer<(typeof schemas)[ElementTypes.TEXT]>
+    [ElementTypes.LINK]: z.infer<(typeof schemas)[ElementTypes.LINK]>
+    [ElementTypes.IMAGE]: z.infer<(typeof schemas)[ElementTypes.IMAGE]>
   }
 
   const forms = {
@@ -95,9 +100,12 @@ export const useVideoBoard = () => {
   const { watch: watchImageForm } = forms[ElementTypes.IMAGE]
 
   const submitFunctions = {
-    [ElementTypes.TEXT]: (data: SchemaTypes[ElementTypes.TEXT]) => console.log('Form Data:', data),
-    [ElementTypes.LINK]: (data: SchemaTypes[ElementTypes.LINK]) => console.log('Link Form Data:', data),
-    [ElementTypes.IMAGE]: (data: SchemaTypes[ElementTypes.IMAGE]) => console.log('Image Form Data:', data),
+    [ElementTypes.TEXT]: (data: SchemaTypes[ElementTypes.TEXT]) =>
+      console.log('Form Data:', data),
+    [ElementTypes.LINK]: (data: SchemaTypes[ElementTypes.LINK]) =>
+      console.log('Link Form Data:', data),
+    [ElementTypes.IMAGE]: (data: SchemaTypes[ElementTypes.IMAGE]) =>
+      console.log('Image Form Data:', data),
   }
 
   const addElement = (type: ElementTypes) => {
@@ -108,18 +116,29 @@ export const useVideoBoard = () => {
 
     const form = forms[type]
     const resetValues: any = {
-      ...(type !== ElementTypes.IMAGE && { fontSize: String((newElement as any).fontSize ?? 12) }),
-      ...(type === ElementTypes.IMAGE && { width: (newElement as ImageElement).width, height: (newElement as ImageElement).height }),
+      ...(type !== ElementTypes.IMAGE && {
+        fontSize: String((newElement as any).fontSize ?? 12),
+      }),
+      ...(type === ElementTypes.IMAGE && {
+        width: (newElement as ImageElement).width,
+        height: (newElement as ImageElement).height,
+      }),
       startTime: String(newElement.startTime ?? 0),
       endTime: String(newElement.endTime ?? 0),
+      borderColor: defaultElement.borderColor,
     }
     if (type === ElementTypes.TEXT) {
       resetValues.content = (newElement as TextElement).content
       resetValues.bgColor = (newElement as TextElement).bgColor
+      resetValues.textColor = (newElement as TextElement).textColor
     } else if (type === ElementTypes.LINK) {
       resetValues.content = (newElement as LinkElement).content
       resetValues.url = (newElement as LinkElement).url
+      resetValues.textColor = (newElement as TextElement).textColor
+    } else if (type === ElementTypes.IMAGE) {
+      resetValues.image = (newElement as ImageElement).image
     }
+
     form.reset(resetValues)
   }
 
@@ -144,16 +163,31 @@ export const useVideoBoard = () => {
           return {
             ...selectedElement,
             ...updatedElement,
-            ...(selectedElement.type !== ElementTypes.IMAGE && 'fontSize' in updatedElement ? { fontSize: updatedElement.fontSize ? Number(updatedElement.fontSize) : selectedElement.fontSize } : {}),
-            width: updatedElement.width ? Number(updatedElement.width) : selectedElement.width,
-            height: updatedElement.height ? Number(updatedElement.height) : selectedElement.height,
-            borderWidth: updatedElement.borderWidth ? Number(updatedElement.borderWidth) : selectedElement.borderWidth,
-            borderRadius: updatedElement.borderRadius ? Number(updatedElement.borderRadius) : selectedElement.borderRadius,
+            ...(selectedElement.type !== ElementTypes.IMAGE &&
+            'fontSize' in updatedElement
+              ? {
+                  fontSize: updatedElement.fontSize
+                    ? Number(updatedElement.fontSize)
+                    : selectedElement.fontSize,
+                }
+              : {}),
+            width: updatedElement.width
+              ? Number(updatedElement.width)
+              : selectedElement.width,
+            height: updatedElement.height
+              ? Number(updatedElement.height)
+              : selectedElement.height,
+            borderWidth: updatedElement.borderWidth
+              ? Number(updatedElement.borderWidth)
+              : selectedElement.borderWidth,
+            borderRadius: updatedElement.borderRadius
+              ? Number(updatedElement.borderRadius)
+              : selectedElement.borderRadius,
             endTime,
             startTime,
             type: selectedElement.type,
-            position: selectedElement.position
-          } as TextElement | LinkElement | ImageElement 
+            position: selectedElement.position,
+          } as TextElement | LinkElement | ImageElement
         }
         return el
       }),
@@ -173,7 +207,9 @@ export const useVideoBoard = () => {
     const subscription = watchFunction((data: any) => {
       const updates: any = {
         ...data,
-        startTime: data.startTime ? Number(timeToSeconds(data.startTime)) : undefined,
+        startTime: data.startTime
+          ? Number(timeToSeconds(data.startTime))
+          : undefined,
         endTime: data.endTime ? Number(timeToSeconds(data.endTime)) : undefined,
       }
 
@@ -245,6 +281,14 @@ export const useVideoBoard = () => {
     localStorage.removeItem('previewElements')
   }
 
+  const deleteElement = (clientId?: string) => {
+    if (!clientId) return
+
+    setElements((prev) => prev.filter((el) => el.clientId !== clientId))
+
+    setSelectedElementId('')
+  }
+
   return {
     textForm: forms[ElementTypes.TEXT],
     submitText: submitFunctions[ElementTypes.TEXT],
@@ -262,6 +306,7 @@ export const useVideoBoard = () => {
     setVideoDuration,
     handleDragEnd,
     handleNavigateToPreview,
-    resetElements
+    resetElements,
+    deleteElement,
   }
 }

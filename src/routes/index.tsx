@@ -73,6 +73,7 @@ function App() {
     handleDragEnd,
     handleNavigateToPreview,
     resetElements,
+    deleteElement,
   } = useVideoBoard()
 
   return (
@@ -147,6 +148,7 @@ function App() {
                       )
                     }
                     if (element.type === ElementTypes.IMAGE) {
+                      console.log(element)
                       return (
                         <ImageComponent
                           onClick={() => handleElementSelect(element.clientId)}
@@ -201,45 +203,17 @@ function App() {
               </MediaControlBar>
             </MediaController>
           </div>
-          {/*     <div className="w-full h-[80%] bg-amber-500 ">
-            <MediaController
-              style={{
-                width: '100%',
-                aspectRatio: '16/9',
-              }}
-            >
-              <ReactPlayer
-                slot="media"
-                src="https://stream.mux.com/maVbJv2GSYNRgS02kPXOOGdJMWGU1mkA019ZUjYE7VU7k"
-                controls={false}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  '--controls': 'none',
-                }}
-              ></ReactPlayer>
-              <MediaControlBar>
-                <MediaPlayButton />
-                <MediaSeekBackwardButton seekOffset={10} />
-                <MediaSeekForwardButton seekOffset={10} />
-                <MediaTimeRange />
-                <MediaTimeDisplay showDuration />
-                <MediaMuteButton />
-                <MediaVolumeRange />
-                <MediaPlaybackRateButton />
-                <MediaFullscreenButton />
-              </MediaControlBar>
-            </MediaController>
-          </div> */}
         </div>
         <div className="col-span-3 h-full border-l border-gray-200 overflow-hidden">
-          <div className="w-full py-2 border-b border-gray-200">
-            <BoardMenu
-              onClick={() => {}}
-              icon={<TrashIcon className="size-4" />}
-              text="Delete"
-            />
-          </div>
+          {selectedElement?.clientId && (
+            <div className="w-full py-2 border-b border-gray-200">
+              <BoardMenu
+                onClick={() => deleteElement(selectedElement?.clientId)}
+                icon={<TrashIcon className="size-4" />}
+                text="Delete"
+              />
+            </div>
+          )}
           <div className="w-full p-2 space-y-5 overflow-auto max-h-[90%] h-[90%]">
             {selectedElement?.type === ElementTypes.TEXT && (
               <Form {...textForm}>
