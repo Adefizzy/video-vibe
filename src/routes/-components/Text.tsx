@@ -71,7 +71,7 @@ export const Text = (props: TextElement) => {
 
         return { x, y }
       }}
-      draggable
+      draggable={props.draggable ?? true}
     >
       <Rect
         ref={rectRef}

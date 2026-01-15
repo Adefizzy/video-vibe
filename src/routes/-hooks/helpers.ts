@@ -34,16 +34,6 @@ const createTimeSchema = (maxSeconds: number) => {
     )
 }
 
-/* export const getTextSchema = (videoDuration: number) =>
-  z.object({
-    content: z.string().min(1, 'Content is required'),
-    bgColor: z.string().optional(),
-    textColor: z.string().optional(),
-    borderColor: z.string().optional(),
-    fontSize: z.string().optional(),
-    fontFamily: z.string().optional(),
-  }).extend(createTimeSchema(videoDuration)) */
-
 
   export const getTextSchema = (videoDuration: number) => {
   const base = z.object({
@@ -64,6 +54,20 @@ export const getLinkSchema = (videoDuration: number) =>
   getTextSchema(videoDuration).extend({
     url: z.string().regex(/^https:\/\/.*/, 'URL must start with https://'),
   })
+
+export const getImageSchema = (videoDuration: number) => {
+  const base = z.object({
+    image: z.instanceof(File).refine(file => file.type.startsWith('image/'), 'Must be an image file'),
+    width: z.number().min(1, 'Width must be positive'),
+    height: z.number().min(1, 'Height must be positive'),
+    bgColor: z.string().optional(),
+    borderColor: z.string().optional(),
+  })
+
+  const timeSchema = createTimeSchema(videoDuration)
+
+  return base.extend(timeSchema.shape)
+}
 
 export const textInputs: FormInputProps[] = [
   {
@@ -178,3 +182,59 @@ export const linkInputs: FormInputProps[] = [
   },
   ...textInputs.filter((input) => input.name !== 'content'),
 ]
+
+export const imageInputs: FormInputProps[] = [
+  {
+    label: 'Image',
+    name: 'image',
+    required: true,
+    placeholder: 'Select an image',
+    type: InputEnum.IMAGE,
+  },
+  {
+    label: 'Width',
+    name: 'width',
+    required: true,
+    placeholder: 'Enter width',
+    type: InputEnum.NUMBER,
+  },
+  {
+    label: 'Height',
+    name: 'height',
+    required: true,
+    placeholder: 'Enter height',
+    type: InputEnum.NUMBER,
+  },
+  {
+    label: 'Start time',
+    name: 'startTime',
+    required: true,
+    placeholder: '00:00:00',
+    type: InputEnum.TIME,
+    videoDuration: 544,
+  },
+  {
+    label: 'End time',
+    name: 'endTime',
+    required: true,
+    placeholder: '00:00:00',
+    type: InputEnum.TIME,
+    videoDuration: 544,
+  },
+  {
+    label: 'Background Color',
+    name: 'bgColor',
+    required: false,
+    placeholder: 'Pick a background color',
+    type: InputEnum.COLOR_PICKER,
+  },
+  {
+    label: 'Border Color',
+    name: 'borderColor',
+    required: false,
+    placeholder: 'Pick a border color',
+    type: InputEnum.COLOR_PICKER,
+  }
+]
+
+

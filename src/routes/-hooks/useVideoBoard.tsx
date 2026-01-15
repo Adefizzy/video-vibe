@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form'
-import { getLinkSchema, getTextSchema } from './helpers'
+import { getLinkSchema, getTextSchema, getImageSchema } from './helpers'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ElementTypes } from '@/_shared/constants'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -8,6 +8,7 @@ import { ReactPlayerProps } from 'react-player/types'
 import z from 'zod'
 import { useDurationTiming } from './useDurationTiming'
 import { timeToSeconds } from '@/lib/utils'
+import { useNavigate } from '@tanstack/react-router'
 
 const textElement: TextElement = {
   type: ElementTypes.TEXT,
@@ -38,14 +39,26 @@ const linkElement: LinkElement = {
   },
 }
 
+const imageElement: ImageElement = {
+  type: ElementTypes.IMAGE,
+  image: 'https://placehold.co/600x400',
+  width: 100,
+  height: 100,
+  position: {
+    x: 50,
+    y: 50,
+  },
+}
+
 export const useVideoBoard = () => {
+    const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
   const videoPlayerRef = useRef<ReactPlayerProps>(null)
   const [containerDimensions, setContainerDimensions] = useState({
     width: 0,
     height: 0,
   })
-  const [elements, setElements] = useState<Array<TextElement | LinkElement>>([])
+  const [elements, setElements] = useState<Array<TextElement | LinkElement | ImageElement>>([])
   const [selectedElementId, setSelectedElementId] = useState<string>('')
   const [videoDuration, setVideoDuration] = useState<number>(0)
   console.log('elemens:', elements)
@@ -58,8 +71,13 @@ export const useVideoBoard = () => {
     () => getLinkSchema(videoDuration),
     [videoDuration],
   )
+  const ImageSchema = useMemo(
+    () => getImageSchema(videoDuration),
+    [videoDuration],
+  )
   type ITextSchema = z.infer<typeof TextSchema>
   type ILinkSchema = z.infer<typeof LinkSchema>
+  type IImageSchema = z.infer<typeof ImageSchema>
 
   useEffect(() => {
     if (containerRef.current) {
@@ -83,10 +101,19 @@ export const useVideoBoard = () => {
     },
     resolver: zodResolver(LinkSchema),
   })
+  const imageForm = useForm<IImageSchema>({
+    defaultValues: {
+      width: 100,
+      height: 100,
+    },
+    resolver: zodResolver(ImageSchema),
+  })
   useDurationTiming({ form: textForm })
   useDurationTiming({ form: linkForm })
+  useDurationTiming({ form: imageForm })
   const { watch: watchTextForm } = textForm
   const { watch: watchLinkForm } = linkForm
+  const { watch: watchImageForm } = imageForm
 
   const submitText = (data: ITextSchema) => {
     console.log('Form Data:', data)
@@ -94,6 +121,10 @@ export const useVideoBoard = () => {
 
   const submitLink = (data: ILinkSchema) => {
     console.log('Link Form Data:', data)
+  }
+
+  const submitImage = (data: IImageSchema) => {
+    console.log('Image Form Data:', data)
   }
 
   const addElement = (type: ElementTypes) => {
@@ -121,6 +152,19 @@ export const useVideoBoard = () => {
           endTime: String(newLinkElement.endTime ?? 0),
         })
         break
+      case ElementTypes.IMAGE:
+        const newImageElement = { ...imageElement, clientId: uuidv4() }
+        setElements([...elements, newImageElement])
+        setSelectedElementId(newImageElement.clientId)
+        imageForm.reset({
+          ...newImageElement,
+          width: newImageElement.width ?? 100,
+          height: newImageElement.height ?? 100,
+          startTime: String(newImageElement.startTime ?? 0),
+          endTime: String(newImageElement.endTime ?? 0),
+          image: newImageElement.image as File,
+        })
+        break
       default:
         break
     }
@@ -132,8 +176,8 @@ export const useVideoBoard = () => {
   )
 
   const updateElement = (
-    updatedElement: Partial<TextElement | LinkElement>,
-    selectedElement: TextElement | LinkElement,
+    updatedElement: Partial<TextElement | LinkElement | ImageElement>,
+    selectedElement: TextElement | LinkElement | ImageElement,
   ) => {
     setElements((prevElements) =>
       prevElements.map((el) => {
@@ -147,12 +191,16 @@ export const useVideoBoard = () => {
           return {
             ...selectedElement,
             ...updatedElement,
-            fontSize: Number(updatedElement.fontSize),
+            ...(selectedElement.type !== ElementTypes.IMAGE && 'fontSize' in updatedElement ? { fontSize: updatedElement.fontSize ? Number(updatedElement.fontSize) : selectedElement.fontSize } : {}),
+            width: updatedElement.width ? Number(updatedElement.width) : selectedElement.width,
+            height: updatedElement.height ? Number(updatedElement.height) : selectedElement.height,
+            borderWidth: updatedElement.borderWidth ? Number(updatedElement.borderWidth) : selectedElement.borderWidth,
+            borderRadius: updatedElement.borderRadius ? Number(updatedElement.borderRadius) : selectedElement.borderRadius,
             endTime,
             startTime,
             type: selectedElement.type,
             position: selectedElement.position
-          } as TextElement | LinkElement
+          } as TextElement | LinkElement | ImageElement 
         }
         return el
       }),
@@ -199,6 +247,25 @@ export const useVideoBoard = () => {
       })
       return () => subscriptionLink.unsubscribe()
     }
+
+    if (selectedElement.type === ElementTypes.IMAGE) {
+      const subscriptionImage = watchImageForm((data) => {
+        updateElement(
+          {
+            ...data,
+            image: data.image ? URL.createObjectURL(data.image) : undefined,
+            startTime: data.startTime
+              ? Number(timeToSeconds(data.startTime))
+              : undefined,
+            endTime: data.endTime
+              ? Number(timeToSeconds(data.endTime))
+              : undefined,
+          },
+          selectedElement,
+        )
+      })
+      return () => subscriptionImage.unsubscribe()
+    }
   }, [selectedElement, watchTextForm, watchLinkForm])
 
   const handleElementSelect = (clientId?: string) => {
@@ -228,11 +295,28 @@ export const useVideoBoard = () => {
     )
   }
 
+  const handleNavigateToPreview = () => {
+    // Save elements to localStorage
+    localStorage.setItem('previewElements', JSON.stringify(elements))
+    console.log('Saved elements:', elements)
+    // Save project details to localStorage
+    const project = {
+      projectName: 'Demo Project',
+      videoUrl: 'https://youtu.be/2Z1oKtxleb4?si=5YQnp50-f5MA5PuA',
+    }
+    localStorage.setItem('previewProject', JSON.stringify(project))
+
+    // Navigate to preview page
+    navigate({ to: '/preview' })
+  }
+
   return {
     textForm,
     submitText,
     linkForm,
     submitLink,
+    imageForm,
+    submitImage,
     addElement,
     containerRef,
     containerDimensions,
@@ -242,5 +326,6 @@ export const useVideoBoard = () => {
     handleElementSelect,
     setVideoDuration,
     handleDragEnd,
+    handleNavigateToPreview
   }
 }

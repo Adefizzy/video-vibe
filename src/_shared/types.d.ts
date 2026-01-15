@@ -25,11 +25,37 @@ interface TextElement {
   onDragStart?: (event: Konva.KonvaEventObject<MouseEvent>) => void
   onMouseDown?: (event: Konva.KonvaEventObject<MouseEvent>) => void
   onDblClick?: (event: Konva.KonvaEventObject<MouseEvent>) => void
+  draggable?: boolean
 }
 
 interface LinkElement extends TextElement {
   type: 'link'
   url: string
+}
+
+interface ImageElement {
+  type: 'image'
+  id?: string
+  clientId?: string
+  image: HTMLImageElement | string | File
+  width: number
+  height: number
+  bgColor?: string
+  borderRadius?: number
+  borderWidth?: number
+  borderColor?: string
+  startTime?: number
+  endTime?: number
+  position?: {
+    x?: number
+    y?: number
+  }
+  onClick?: (event: Konva.KonvaEventObject<MouseEvent>) => void
+  onDragEnd?: (event: Konva.KonvaEventObject<MouseEvent>) => void
+  onDragStart?: (event: Konva.KonvaEventObject<MouseEvent>) => void
+  onMouseDown?: (event: Konva.KonvaEventObject<MouseEvent>) => void
+  onDblClick?: (event: Konva.KonvaEventObject<MouseEvent>) => void
+  draggable?: boolean
 }
 
 
@@ -51,4 +77,5 @@ type FormInputProps = {
   pattern?: string;
   size?: number;
   videoDuration?: number;
+  accept?: string;
 };

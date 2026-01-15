@@ -2,16 +2,15 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Stage, Layer } from 'react-konva'
 import { Text as TextComponent } from './-components/Text'
 import { Link as LinkComponent } from './-components/Link'
-import { useEffect, useRef, useState } from 'react'
+import { Image as ImageComponent } from './-components/Image'
 import { Button } from '@/components/ui/button'
-import { v4 as uuidv4 } from 'uuid'
 import { ElementTypes } from '@/_shared/constants'
 import { TypeIcon, LinkIcon, ImageIcon, TrashIcon } from 'lucide-react'
 import { BoardMenu } from './-components/BoardMenu'
 import { useVideoBoard } from './-hooks/useVideoBoard'
 import { Form } from '@/components/ui/form'
 import GenericFormInputs from '@/components/GenericFormInputs'
-import { linkInputs, textInputs } from './-hooks/helpers'
+import { linkInputs, textInputs, imageInputs } from './-hooks/helpers'
 import ReactPlayer from 'react-player'
 import {
   MediaController,
@@ -51,6 +50,8 @@ function App() {
     submitText,
     linkForm,
     submitLink,
+    imageForm,
+    submitImage,
     addElement,
     containerRef,
     containerDimensions,
@@ -60,10 +61,15 @@ function App() {
     handleElementSelect,
     setVideoDuration,
     handleDragEnd,
+    handleNavigateToPreview,
   } = useVideoBoard()
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-white">
+    <div className="w-screen h-screen bg-white">
+      <div className='py-5 container mx-auto flex justify-end'>
+        <Button onClick={() => handleNavigateToPreview()}>Preview</Button>
+      </div>
+
       <div className="grid grid-cols-12 container mx-auto h-[80vh] border border-gray-200 rounded-lg">
         <div className="col-span-9 h-full px-5  ">
           <div className="w-full py-2 border-b border-gray-200">
@@ -127,6 +133,24 @@ function App() {
                         />
                       )
                     }
+                    if (element.type === ElementTypes.IMAGE) {
+                      return (
+                        <ImageComponent
+                          onClick={() => handleElementSelect(element.clientId)}
+                          key={element.clientId}
+                          {...element}
+                          onDragEnd={(e) => {
+                            if (!element.clientId) return
+
+                            handleDragEnd({
+                              clientId: element.clientId,
+                              x: e.target.x(),
+                              y: e.target.y(),
+                            })
+                          }}
+                        />
+                      )
+                    }
                   })}
                 </Layer>
               </Stage>
@@ -145,18 +169,10 @@ function App() {
                 style={{
                   width: '100%',
                   height: '100%',
-                  '--controls': 'none',
+                  // '--controls': 'none',
                 }}
                 onDurationChange={(duration) => {
-                  console.log(
-                    'Video duration:',
-                    duration.currentTarget.duration,
-                  )
                   setVideoDuration(duration.currentTarget.duration)
-                }}
-                onDuration={(duration: any) => {
-                  console.log('Video duration2:', duration)
-                  //setVideoDuration(duration)
                 }}
               ></ReactPlayer>
               <MediaControlBar>
@@ -249,6 +265,30 @@ function App() {
                           key={`${input.name}-${idx}`}
                           {...input}
                           form={linkForm}
+                        />
+                      )
+                    })}
+                  </div>
+                  <Button type="submit" size="lg" className="w-full">
+                    Save
+                  </Button>
+                </form>
+              </Form>
+            )}
+
+            {selectedElement?.type === ElementTypes.IMAGE && (
+              <Form {...imageForm}>
+                <form
+                  onSubmit={imageForm.handleSubmit(submitImage)}
+                  className="space-y-5"
+                >
+                  <div className="space-y-5">
+                    {imageInputs.map((input, idx) => {
+                      return (
+                        <GenericFormInputs
+                          key={`${input.name}-${idx}`}
+                          {...input}
+                          form={imageForm}
                         />
                       )
                     })}

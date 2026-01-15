@@ -8,6 +8,7 @@ import { InputEnum } from '@/_shared/constants'
 import { ColorPicker } from './ColorPickerField'
 import { de } from 'zod/v4/locales'
 import { TimeField } from './TimeField'
+import { ImageInputField } from './ImageInputField'
 
 type IForm = { form: UseFormReturn<z.infer<any>, any, any> }
 const GenericFormInputs: FC<FormInputProps & IForm> = ({
@@ -25,7 +26,8 @@ const GenericFormInputs: FC<FormInputProps & IForm> = ({
   pattern, 
   size,
   defaultValue,
-  videoDuration
+  videoDuration,
+  accept,
 }) => {
   switch (type) {
     case InputEnum.TEXT:
@@ -94,6 +96,21 @@ const GenericFormInputs: FC<FormInputProps & IForm> = ({
             videoDuration={videoDuration ?? 0}
           />
         ) 
+        case InputEnum.IMAGE:
+        // Image input handled separately
+        return (
+          <ImageInputField
+            form={form}
+            name={name}
+            placeholder={placeholder}
+            label={label}
+            description={description}
+            required={required}
+            className={className}
+            disabled={disabled}
+            accept={accept}
+          />
+        )
     default:
       return null
   }
