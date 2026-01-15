@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Stage, Layer } from 'react-konva'
 import { Text as TextComponent } from './-components/Text'
 import { Link as LinkComponent } from './-components/Link'
@@ -12,6 +12,7 @@ import { Form } from '@/components/ui/form'
 import GenericFormInputs from '@/components/GenericFormInputs'
 import { linkInputs, textInputs, imageInputs } from './-hooks/helpers'
 import ReactPlayer from 'react-player'
+import Header from '@/components/Header'
 import {
   MediaController,
   MediaControlBar,
@@ -27,6 +28,15 @@ import {
 } from 'media-chrome/react'
 
 export const Route = createFileRoute('/')({
+  beforeLoad: () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      throw redirect({
+        to: '/login',
+        search: {},
+      })
+    }
+  },
   component: App,
 })
 
@@ -62,12 +72,15 @@ function App() {
     setVideoDuration,
     handleDragEnd,
     handleNavigateToPreview,
+    resetElements,
   } = useVideoBoard()
 
   return (
     <div className="w-screen h-screen bg-white">
-      <div className='py-5 container mx-auto flex justify-end'>
+      <Header />
+      <div className="py-5 container mx-auto flex justify-end space-x-5">
         <Button onClick={() => handleNavigateToPreview()}>Preview</Button>
+        <Button onClick={resetElements}>Reset Anontations</Button>
       </div>
 
       <div className="grid grid-cols-12 container mx-auto h-[80vh] border border-gray-200 rounded-lg">
@@ -89,8 +102,8 @@ function App() {
               text="Image"
             />
           </div>
-          <div className="w-full h-[80%] bg-red-400 relative">
-            <div ref={containerRef} className="w-full h-[95%] z-50 absolute">
+          <div className="w-full h-[80%] relative">
+            <div ref={containerRef} className="w-full h-[95%] z-10 absolute">
               <Stage
                 width={containerDimensions.width}
                 height={containerDimensions.height}

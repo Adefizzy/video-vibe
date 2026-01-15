@@ -10,48 +10,39 @@ import { useDurationTiming } from './useDurationTiming'
 import { timeToSeconds } from '@/lib/utils'
 import { useNavigate } from '@tanstack/react-router'
 
-const textElement: TextElement = {
-  type: ElementTypes.TEXT,
-  content: 'New Text',
-  bgColor: '#000',
-  textColor: '#fff',
-  fontSize: 26,
-  fontFamily: 'Calibri',
-  align: 'left',
-  position: {
-    x: 50,
-    y: 50,
-  },
-}
-
-const linkElement: LinkElement = {
-  type: ElementTypes.LINK,
-  url: 'https://www.google.com',
-  content: 'New Link',
-  bgColor: '#000',
-  textColor: '#fff',
-  fontSize: 26,
-  fontFamily: 'Calibri',
-  align: 'left',
-  position: {
-    x: 50,
-    y: 50,
-  },
-}
-
-const imageElement: ImageElement = {
-  type: ElementTypes.IMAGE,
-  image: 'https://placehold.co/600x400',
-  width: 100,
-  height: 100,
-  position: {
-    x: 50,
-    y: 50,
-  },
+const defaultElements = {
+  [ElementTypes.TEXT]: {
+    type: ElementTypes.TEXT,
+    content: 'New Text',
+    bgColor: '#000',
+    textColor: '#fff',
+    fontSize: 26,
+    fontFamily: 'Calibri',
+    align: 'left',
+    position: { x: 50, y: 50 },
+  } as TextElement,
+  [ElementTypes.LINK]: {
+    type: ElementTypes.LINK,
+    url: 'https://www.google.com',
+    content: 'New Link',
+    bgColor: '#000',
+    textColor: '#fff',
+    fontSize: 26,
+    fontFamily: 'Calibri',
+    align: 'left',
+    position: { x: 50, y: 50 },
+  } as LinkElement,
+  [ElementTypes.IMAGE]: {
+    type: ElementTypes.IMAGE,
+    image: 'https://placehold.co/600x400',
+    width: 100,
+    height: 100,
+    position: { x: 50, y: 50 },
+  } as ImageElement,
 }
 
 export const useVideoBoard = () => {
-    const navigate = useNavigate()
+  const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
   const videoPlayerRef = useRef<ReactPlayerProps>(null)
   const [containerDimensions, setContainerDimensions] = useState({
@@ -61,23 +52,37 @@ export const useVideoBoard = () => {
   const [elements, setElements] = useState<Array<TextElement | LinkElement | ImageElement>>([])
   const [selectedElementId, setSelectedElementId] = useState<string>('')
   const [videoDuration, setVideoDuration] = useState<number>(0)
-  console.log('elemens:', elements)
 
-  const TextSchema = useMemo(
-    () => getTextSchema(videoDuration),
-    [videoDuration],
-  )
-  const LinkSchema = useMemo(
-    () => getLinkSchema(videoDuration),
-    [videoDuration],
-  )
-  const ImageSchema = useMemo(
-    () => getImageSchema(videoDuration),
-    [videoDuration],
-  )
-  type ITextSchema = z.infer<typeof TextSchema>
-  type ILinkSchema = z.infer<typeof LinkSchema>
-  type IImageSchema = z.infer<typeof ImageSchema>
+  const schemas = useMemo(() => ({
+    [ElementTypes.TEXT]: getTextSchema(videoDuration),
+    [ElementTypes.LINK]: getLinkSchema(videoDuration),
+    [ElementTypes.IMAGE]: getImageSchema(videoDuration),
+  }), [videoDuration])
+
+  type SchemaTypes = {
+    [ElementTypes.TEXT]: z.infer<typeof schemas[ElementTypes.TEXT]>
+    [ElementTypes.LINK]: z.infer<typeof schemas[ElementTypes.LINK]>
+    [ElementTypes.IMAGE]: z.infer<typeof schemas[ElementTypes.IMAGE]>
+  }
+
+  const forms = {
+    [ElementTypes.TEXT]: useForm<SchemaTypes[ElementTypes.TEXT]>({
+      defaultValues: { content: '', bgColor: '#000' },
+      resolver: zodResolver(schemas[ElementTypes.TEXT]),
+    }),
+    [ElementTypes.LINK]: useForm<SchemaTypes[ElementTypes.LINK]>({
+      defaultValues: { content: '', url: '' },
+      resolver: zodResolver(schemas[ElementTypes.LINK]),
+    }),
+    [ElementTypes.IMAGE]: useForm<SchemaTypes[ElementTypes.IMAGE]>({
+      defaultValues: { width: 100, height: 100 },
+      resolver: zodResolver(schemas[ElementTypes.IMAGE]),
+    }),
+  }
+
+  useDurationTiming({ form: forms[ElementTypes.TEXT] })
+  useDurationTiming({ form: forms[ElementTypes.LINK] })
+  useDurationTiming({ form: forms[ElementTypes.IMAGE] })
 
   useEffect(() => {
     if (containerRef.current) {
@@ -85,89 +90,37 @@ export const useVideoBoard = () => {
     }
   }, [containerRef.current])
 
-  const textForm = useForm<ITextSchema>({
-    defaultValues: {
-      content: '',
-      bgColor: '#000',
-      // align: 'left',
-    },
-    resolver: zodResolver(TextSchema),
-  })
-  const linkForm = useForm<ILinkSchema>({
-    defaultValues: {
-      content: '',
-      url: '',
-      // align: 'left',
-    },
-    resolver: zodResolver(LinkSchema),
-  })
-  const imageForm = useForm<IImageSchema>({
-    defaultValues: {
-      width: 100,
-      height: 100,
-    },
-    resolver: zodResolver(ImageSchema),
-  })
-  useDurationTiming({ form: textForm })
-  useDurationTiming({ form: linkForm })
-  useDurationTiming({ form: imageForm })
-  const { watch: watchTextForm } = textForm
-  const { watch: watchLinkForm } = linkForm
-  const { watch: watchImageForm } = imageForm
+  const { watch: watchTextForm } = forms[ElementTypes.TEXT]
+  const { watch: watchLinkForm } = forms[ElementTypes.LINK]
+  const { watch: watchImageForm } = forms[ElementTypes.IMAGE]
 
-  const submitText = (data: ITextSchema) => {
-    console.log('Form Data:', data)
-  }
-
-  const submitLink = (data: ILinkSchema) => {
-    console.log('Link Form Data:', data)
-  }
-
-  const submitImage = (data: IImageSchema) => {
-    console.log('Image Form Data:', data)
+  const submitFunctions = {
+    [ElementTypes.TEXT]: (data: SchemaTypes[ElementTypes.TEXT]) => console.log('Form Data:', data),
+    [ElementTypes.LINK]: (data: SchemaTypes[ElementTypes.LINK]) => console.log('Link Form Data:', data),
+    [ElementTypes.IMAGE]: (data: SchemaTypes[ElementTypes.IMAGE]) => console.log('Image Form Data:', data),
   }
 
   const addElement = (type: ElementTypes) => {
-    switch (type) {
-      case ElementTypes.TEXT:
-        const newElement = { ...textElement, clientId: uuidv4() }
-        setElements([...elements, newElement])
-        setSelectedElementId(newElement.clientId)
-        textForm.reset({
-          ...newElement,
-          fontSize: String(newElement.fontSize ?? 12),
-          startTime: String(newElement.startTime ?? 0),
-          endTime: String(newElement.endTime ?? 0),
-        })
+    const defaultElement = defaultElements[type]
+    const newElement = { ...defaultElement, clientId: uuidv4() }
+    setElements([...elements, newElement])
+    setSelectedElementId(newElement.clientId)
 
-        break
-      case ElementTypes.LINK:
-        const newLinkElement = { ...linkElement, clientId: uuidv4() }
-        setElements([...elements, newLinkElement])
-        setSelectedElementId(newLinkElement.clientId)
-        linkForm.reset({
-          ...newLinkElement,
-          fontSize: String(newLinkElement.fontSize ?? 12),
-          startTime: String(newLinkElement.startTime ?? 0),
-          endTime: String(newLinkElement.endTime ?? 0),
-        })
-        break
-      case ElementTypes.IMAGE:
-        const newImageElement = { ...imageElement, clientId: uuidv4() }
-        setElements([...elements, newImageElement])
-        setSelectedElementId(newImageElement.clientId)
-        imageForm.reset({
-          ...newImageElement,
-          width: newImageElement.width ?? 100,
-          height: newImageElement.height ?? 100,
-          startTime: String(newImageElement.startTime ?? 0),
-          endTime: String(newImageElement.endTime ?? 0),
-          image: newImageElement.image as File,
-        })
-        break
-      default:
-        break
+    const form = forms[type]
+    const resetValues: any = {
+      ...(type !== ElementTypes.IMAGE && { fontSize: String((newElement as any).fontSize ?? 12) }),
+      ...(type === ElementTypes.IMAGE && { width: (newElement as ImageElement).width, height: (newElement as ImageElement).height }),
+      startTime: String(newElement.startTime ?? 0),
+      endTime: String(newElement.endTime ?? 0),
     }
+    if (type === ElementTypes.TEXT) {
+      resetValues.content = (newElement as TextElement).content
+      resetValues.bgColor = (newElement as TextElement).bgColor
+    } else if (type === ElementTypes.LINK) {
+      resetValues.content = (newElement as LinkElement).content
+      resetValues.url = (newElement as LinkElement).url
+    }
+    form.reset(resetValues)
   }
 
   const selectedElement = useMemo(
@@ -210,63 +163,33 @@ export const useVideoBoard = () => {
   useEffect(() => {
     if (!selectedElement) return
 
-    if (selectedElement.type === ElementTypes.TEXT) {
-      const subscriptionText = watchTextForm((data) => {
-        updateElement(
-          {
-            ...data,
-            fontSize: data.fontSize ? Number(data.fontSize) : undefined,
-            startTime: data.startTime
-              ? Number(timeToSeconds(data.startTime))
-              : undefined,
-            endTime: data.endTime
-              ? Number(timeToSeconds(data.endTime))
-              : undefined,
-          },
-          selectedElement,
-        )
-      })
-      return () => subscriptionText.unsubscribe()
-    }
+    const type = selectedElement.type
+    const watchFunction = {
+      [ElementTypes.TEXT]: watchTextForm,
+      [ElementTypes.LINK]: watchLinkForm,
+      [ElementTypes.IMAGE]: watchImageForm,
+    }[type] as any
 
-    if (selectedElement.type === ElementTypes.LINK) {
-      const subscriptionLink = watchLinkForm((data) => {
-        updateElement(
-          {
-            ...data,
-            fontSize: data.fontSize ? Number(data.fontSize) : undefined,
-            startTime: data.startTime
-              ? Number(timeToSeconds(data.startTime))
-              : undefined,
-            endTime: data.endTime
-              ? Number(timeToSeconds(data.endTime))
-              : undefined,
-          },
-          selectedElement,
-        )
-      })
-      return () => subscriptionLink.unsubscribe()
-    }
+    const subscription = watchFunction((data: any) => {
+      const updates: any = {
+        ...data,
+        startTime: data.startTime ? Number(timeToSeconds(data.startTime)) : undefined,
+        endTime: data.endTime ? Number(timeToSeconds(data.endTime)) : undefined,
+      }
 
-    if (selectedElement.type === ElementTypes.IMAGE) {
-      const subscriptionImage = watchImageForm((data) => {
-        updateElement(
-          {
-            ...data,
-            image: data.image ? URL.createObjectURL(data.image) : undefined,
-            startTime: data.startTime
-              ? Number(timeToSeconds(data.startTime))
-              : undefined,
-            endTime: data.endTime
-              ? Number(timeToSeconds(data.endTime))
-              : undefined,
-          },
-          selectedElement,
-        )
-      })
-      return () => subscriptionImage.unsubscribe()
-    }
-  }, [selectedElement, watchTextForm, watchLinkForm])
+      if (type !== ElementTypes.IMAGE) {
+        updates.fontSize = data.fontSize ? Number(data.fontSize) : undefined
+      }
+
+      if (type === ElementTypes.IMAGE) {
+        updates.image = data.image ? URL.createObjectURL(data.image) : undefined
+      }
+
+      updateElement(updates, selectedElement)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [selectedElement, watchTextForm, watchLinkForm, watchImageForm])
 
   const handleElementSelect = (clientId?: string) => {
     if (!clientId) return
@@ -298,7 +221,6 @@ export const useVideoBoard = () => {
   const handleNavigateToPreview = () => {
     // Save elements to localStorage
     localStorage.setItem('previewElements', JSON.stringify(elements))
-    console.log('Saved elements:', elements)
     // Save project details to localStorage
     const project = {
       projectName: 'Demo Project',
@@ -310,13 +232,26 @@ export const useVideoBoard = () => {
     navigate({ to: '/preview' })
   }
 
+  // check if localStorage has previewElements and load them
+  useEffect(() => {
+    const storedElements = localStorage.getItem('previewElements')
+    if (storedElements) {
+      setElements(JSON.parse(storedElements))
+    }
+  }, [])
+
+  const resetElements = () => {
+    setElements([])
+    localStorage.removeItem('previewElements')
+  }
+
   return {
-    textForm,
-    submitText,
-    linkForm,
-    submitLink,
-    imageForm,
-    submitImage,
+    textForm: forms[ElementTypes.TEXT],
+    submitText: submitFunctions[ElementTypes.TEXT],
+    linkForm: forms[ElementTypes.LINK],
+    submitLink: submitFunctions[ElementTypes.LINK],
+    imageForm: forms[ElementTypes.IMAGE],
+    submitImage: submitFunctions[ElementTypes.IMAGE],
     addElement,
     containerRef,
     containerDimensions,
@@ -326,6 +261,7 @@ export const useVideoBoard = () => {
     handleElementSelect,
     setVideoDuration,
     handleDragEnd,
-    handleNavigateToPreview
+    handleNavigateToPreview,
+    resetElements
   }
 }

@@ -21,7 +21,6 @@ export const Text = (props: TextElement) => {
 
   useEffect(() => {
     if (textRef.current) {
-      console.log('Calculating text rect...', textRef.current.getSelfRect())
       setRectDimensions(textRef.current.getSelfRect())
     }
   }, [

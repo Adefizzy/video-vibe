@@ -237,4 +237,48 @@ export const imageInputs: FormInputProps[] = [
   }
 ]
 
+export const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+})
+
+export const registerSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+})
+
+export const loginInputs: FormInputProps[] = [
+  {
+    label: 'Email',
+    name: 'email',
+    required: true,
+    placeholder: 'Enter your email',
+    type: InputEnum.TEXT,
+  },
+  {
+    label: 'Password',
+    name: 'password',
+    required: true,
+    placeholder: 'Enter your password',
+    type: InputEnum.PASSWORD,
+  },
+]
+
+export const registerInputs: FormInputProps[] = [
+  {
+    label: 'Email',
+    name: 'email',
+    required: true,
+    placeholder: 'Enter your email',
+    type: InputEnum.TEXT,
+  },
+  {
+    label: 'Password',
+    name: 'password',
+    required: true,
+    placeholder: 'Enter your password',
+    type: InputEnum.PASSWORD,
+  },
+]
+
 
