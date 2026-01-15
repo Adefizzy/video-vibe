@@ -56,6 +56,8 @@ export const useVideoBoard = () => {
   const [videoDuration, setVideoDuration] = useState<number>(0)
   const [videoLink, setVideoLink] = useState('')
 
+  console.log({ elements })
+
   const schemas = useMemo(
     () => ({
       [ElementTypes.TEXT]: getTextSchema(videoDuration),
@@ -124,8 +126,8 @@ export const useVideoBoard = () => {
         width: (newElement as ImageElement).width,
         height: (newElement as ImageElement).height,
       }),
-      startTime: String(newElement.startTime ?? 0),
-      endTime: String(newElement.endTime ?? 0),
+      /*  startTime: String(newElement.startTime ?? 0),
+      endTime: String(newElement.endTime ?? 0), */
       borderColor: defaultElement.borderColor,
     }
     if (type === ElementTypes.TEXT) {
@@ -161,6 +163,16 @@ export const useVideoBoard = () => {
           const startTime = updatedElement.startTime
             ? Number(updatedElement.startTime)
             : selectedElement.startTime || 0
+
+          let image = undefined
+
+          if (
+            selectedElement.type === ElementTypes.IMAGE &&
+            updatedElement.type === ElementTypes.IMAGE
+          ) {
+            image = updatedElement.image || selectedElement.image
+          }       
+
           return {
             ...selectedElement,
             ...updatedElement,
@@ -188,6 +200,7 @@ export const useVideoBoard = () => {
             startTime,
             type: selectedElement.type,
             position: selectedElement.position,
+            image: image,
           } as TextElement | LinkElement | ImageElement
         }
         return el
@@ -208,6 +221,7 @@ export const useVideoBoard = () => {
     const subscription = watchFunction((data: any) => {
       const updates: any = {
         ...data,
+        type: selectedElement.type,
         startTime: data.startTime
           ? Number(timeToSeconds(data.startTime))
           : undefined,
@@ -219,7 +233,7 @@ export const useVideoBoard = () => {
       }
 
       if (type === ElementTypes.IMAGE) {
-        updates.image = data.image ? URL.createObjectURL(data.image) : undefined
+        updates.image = data.image
       }
 
       updateElement(updates, selectedElement)
@@ -256,6 +270,24 @@ export const useVideoBoard = () => {
   }
 
   const handleNavigateToPreview = () => {
+    const invalidElement = elements.find((element) => {
+      const startTime = element.startTime
+      return (
+        startTime === undefined ||
+        startTime === null ||
+        typeof startTime !== 'number' ||
+        startTime < 0 ||
+        (videoDuration > 0 && startTime >= videoDuration)
+      )
+    })
+
+    if (invalidElement) {
+      alert(
+        'One or more elements have invalid or missing start times. Please ensure all elements have valid start times before previewing.',
+      )
+      return
+    }
+
     if (!videoLink) return
     // Save elements to localStorage
     localStorage.setItem('previewElements', JSON.stringify(elements))
@@ -276,6 +308,7 @@ export const useVideoBoard = () => {
     const project = localStorage.getItem('previewProject')
     if (storedElements) {
       setElements(JSON.parse(storedElements))
+      console.log(JSON.parse(storedElements))
     }
 
     if (project) {
@@ -298,7 +331,9 @@ export const useVideoBoard = () => {
     setElements(updatedElements)
 
     if (updatedElements.length > 0) {
-      const nextElement = updatedElements?.at(updatedElements.length - 1)?.clientId
+      const nextElement = updatedElements?.at(
+        updatedElements.length - 1,
+      )?.clientId
       setSelectedElementId(nextElement ?? '')
     } else {
       setSelectedElementId('')

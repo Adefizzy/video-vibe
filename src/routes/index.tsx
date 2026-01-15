@@ -281,9 +281,6 @@ function App() {
                       )
                     })}
                   </div>
-                  <Button type="submit" size="lg" className="w-full">
-                    Save
-                  </Button>
                 </form>
               </Form>
             )}
@@ -305,9 +302,6 @@ function App() {
                       )
                     })}
                   </div>
-                  <Button type="submit" size="lg" className="w-full">
-                    Save
-                  </Button>
                 </form>
               </Form>
             )}
@@ -329,9 +323,6 @@ function App() {
                       )
                     })}
                   </div>
-                  <Button type="submit" size="lg" className="w-full">
-                    Save
-                  </Button>
                 </form>
               </Form>
             )}
