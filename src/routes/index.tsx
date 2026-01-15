@@ -106,15 +106,9 @@ function App() {
               text="Image"
             />
           </div>
-          <div className="w-full h-[81%] relative">
-            <div
-              ref={containerRef}
-              className={cn(
-                'w-full z-10 absolute',
-                videoLink ? 'h-[90%]' : 'h-full',
-              )}
-            >
-              {!videoLink ? (
+          <div className="w-full h-[80%] relative bg-amber-400">
+            {!videoLink ? (
+              <div className={cn('w-full z-10 absolute h-full')}>
                 <EmptyComp
                   videoInput={
                     <Input
@@ -130,7 +124,12 @@ function App() {
                     />
                   }
                 />
-              ) : (
+              </div>
+            ) : (
+              <div
+                ref={containerRef}
+                className={cn('w-full z-10 absolute', 'h-[90%]')}
+              >
                 <Stage
                   width={containerDimensions.width}
                   height={containerDimensions.height}
@@ -201,8 +200,9 @@ function App() {
                     })}
                   </Layer>
                 </Stage>
-              )}
-            </div>
+              </div>
+            )}
+
             <MediaController
               style={{
                 width: '100%',
